@@ -18,7 +18,11 @@
             background-color: #1a202c;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%23e9e9e9' fill-opacity='0.05' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.99-7.5L26 15v19L13 41.5 0 34V15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .nav-btn.active { background-color: #3b82f6; color: white; }
+        .nav-btn.active-academy { background-color: #3b82f6; border-color: #3b82f6; color: white; }
+        .nav-btn.active-development { background-color: #f59e0b; border-color: #f59e0b; color: white; }
+        .nav-btn.active-race { background-color: #8b5cf6; border-color: #8b5cf6; color: white; }
+        .nav-btn.active-adults { background-color: #10b981; border-color: #10b981; color: white; }
+        
         .view-btn.active { background-color: #3b82f6; color: white; }
         .gradient-text {
             background: linear-gradient(to right, #3b82f6, #60a5fa);
@@ -63,8 +67,13 @@
             </div>
         </header>
 
-        <nav class="main-nav bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md p-3 mb-6 flex justify-center items-center">
-            <div id="main-category-nav" class="relative inline-flex flex-wrap justify-center rounded-lg shadow-sm" role="group">
+        <nav class="main-nav bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md p-3 mb-6 flex justify-center items-center gap-4">
+            <button id="home-btn" type="button" title="Go to Overview" class="flex-shrink-0 w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+            </button>
+            <div id="main-category-nav" class="relative inline-flex flex-wrap justify-center rounded-lg" role="group">
             </div>
         </nav>
 
@@ -108,7 +117,14 @@
                 cooldown: { title: 'Cooldown', border: 'border-green-500', bg: 'bg-green-50', darkBg: 'dark:bg-green-900/50', text: 'text-green-700', darkText: 'dark:text-green-300', dot: 'bg-green-500' },
                 notes: { title: 'Notes', border: 'border-gray-500', bg: 'bg-gray-100', darkBg: 'dark:bg-gray-700/50', text: 'text-gray-700', darkText: 'dark:text-gray-300', dot: 'bg-gray-400' }
             };
+            const CATEGORY_COLORS = {
+                'Academy': { name: 'academy', text: 'text-blue-500', border: 'border-blue-500', hoverBg: 'hover:bg-blue-50', darkHoverBg: 'dark:hover:bg-blue-900/50' },
+                'Development': { name: 'development', text: 'text-yellow-500', border: 'border-yellow-500', hoverBg: 'hover:bg-yellow-50', darkHoverBg: 'dark:hover:bg-yellow-900/50' },
+                'Race': { name: 'race', text: 'text-purple-500', border: 'border-purple-500', hoverBg: 'hover:bg-purple-50', darkHoverBg: 'dark:hover:bg-purple-900/50' },
+                'Adults': { name: 'adults', text: 'text-green-500', border: 'border-green-500', hoverBg: 'hover:bg-green-50', darkHoverBg: 'dark:hover:bg-green-900/50' }
+            };
 
+            const homeBtn = document.getElementById('home-btn');
             const mainCategoryNav = document.getElementById('main-category-nav');
             const viewToggleContainer = document.getElementById('view-toggle-container');
             const viewToggle = document.getElementById('view-toggle');
@@ -126,6 +142,7 @@
             const todayUTC = new Date(Date.UTC(localToday.getFullYear(), localToday.getMonth(), localToday.getDate()));
 
             function init() {
+                homeBtn.addEventListener('click', goHome);
                 mainCategoryNav.addEventListener('click', handleMainCategoryNavClick);
                 document.addEventListener('click', handleDocumentClick);
 
@@ -135,13 +152,22 @@
                 renderMainNav();
                 renderOverview();
             }
+
+            function goHome() {
+                closeAllDropdowns();
+                selectedClass = null;
+                selectedCategory = null;
+                updateActiveNavButtons();
+                renderOverview();
+            }
             
             function renderMainNav() {
                 mainCategoryNav.innerHTML = Object.keys(CATEGORIES).map((cat, index, arr) => {
+                    const colors = CATEGORY_COLORS[cat];
                     const isFirst = index === 0;
                     const isLast = index === arr.length - 1;
                     const rounded = isFirst ? 'rounded-l-lg' : isLast ? 'rounded-r-lg' : '';
-                    return `<div class="relative"><button type="button" data-category="${cat}" class="nav-btn py-2 px-6 text-sm font-medium text-gray-900 dark:text-white bg-transparent ${rounded} border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500">${cat}</button></div>`;
+                    return `<div class="relative"><button type="button" data-category="${cat}" class="nav-btn py-2 px-6 text-sm font-medium bg-transparent ${rounded} border-2 ${colors.border} ${colors.text} ${colors.hoverBg} ${colors.darkHoverBg} transition-colors">${cat}</button></div>`;
                 }).join('');
             }
             
@@ -182,7 +208,8 @@
 
             function createDropdown(items, category) {
                 const menu = document.createElement('div');
-                menu.className = 'dropdown-menu w-48 mt-2 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none';
+                const colors = CATEGORY_COLORS[category];
+                menu.className = `dropdown-menu w-48 mt-2 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ${colors.border} focus:outline-none`;
                 menu.dataset.category = category;
                 menu.innerHTML = `<div class="py-1" role="menu" aria-orientation="vertical">${items.map(item => `<a href="#" data-class="${item}" class="sub-nav-item text-gray-700 dark:text-gray-300 block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">${item}</a>`).join('')}</div>`;
                 menu.addEventListener('click', handleSubCategorySelect);
@@ -208,7 +235,14 @@
 
             function updateActiveNavButtons() {
                 document.querySelectorAll('#main-category-nav button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.category === selectedCategory);
+                    const category = btn.dataset.category;
+                    const colors = CATEGORY_COLORS[category];
+                    // Reset all active classes first
+                    Object.values(CATEGORY_COLORS).forEach(c => btn.classList.remove(`active-${c.name}`));
+                    
+                    if (category === selectedCategory) {
+                        btn.classList.add(`active-${colors.name}`);
+                    }
                 });
             }
 
@@ -287,7 +321,6 @@
             function createWeatherWidgetHTML(data) {
                 const { description, icon } = getWeatherInfo(data.current.weather_code, 'w-24 h-24');
                 
-                // --- Dynamic Class Suggestions Logic ---
                 const now = new Date();
                 const totalMinutes = now.getHours() * 60 + now.getMinutes();
                 let suggestions = new Set();
@@ -300,13 +333,27 @@
                 const suggestionHTML = suggestionArray.length > 0 ? `
                     <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
                         <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">Current Classes</h3>
-                        <div class="flex justify-center flex-wrap gap-4 mt-4">
-                            ${suggestionArray.map(cat => `<button data-category="${cat}" class="suggestion-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">${cat}</button>`).join('')}
+                        <div class="flex justify-center flex-wrap items-start gap-8 mt-4">
+                            ${suggestionArray.map(cat => {
+                                const subCats = CATEGORIES[cat];
+                                const colors = CATEGORY_COLORS[cat];
+                                return `
+                                <div class="flex flex-col items-center space-y-2">
+                                    <h4 class="font-semibold text-lg ${colors.text} dark:text-white/80">${cat}</h4>
+                                    <div class="flex flex-col space-y-2">
+                                    ${subCats.map(subCat => `
+                                        <button data-class="${subCat}" class="suggestion-btn py-2 px-5 rounded-lg font-medium border-2 ${colors.border} ${colors.text} ${colors.hoverBg} dark:text-white/80 dark:border-white/50 dark:${colors.darkHoverBg} transition-colors">
+                                            ${subCat}
+                                        </button>
+                                    `).join('')}
+                                    </div>
+                                </div>
+                                `
+                            }).join('')}
                         </div>
                     </div>
                 ` : '';
                 
-                // --- Main Widget HTML ---
                 return `
                     <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Weather Overview</h2>
@@ -402,7 +449,10 @@
                 if (e.target.closest('#next-day')) { currentDate.setUTCDate(currentDate.getUTCDate() + 1); renderTodayView(); }
                 const suggestionBtn = e.target.closest('.suggestion-btn');
                 if (suggestionBtn) {
-                    handleMainCategoryNavClick({ target: document.querySelector(`button[data-category="${suggestionBtn.dataset.category}"]`) });
+                    selectedClass = suggestionBtn.dataset.class;
+                    selectedCategory = Object.keys(CATEGORIES).find(key => CATEGORIES[key].includes(selectedClass));
+                    updateActiveNavButtons();
+                    fetchData();
                 }
             }
             function updateActiveButton() { document.querySelectorAll('.view-btn.active').forEach(b => b.classList.remove('active')); document.querySelector(`.view-btn[data-view="${currentView}"]`).classList.add('active'); }
