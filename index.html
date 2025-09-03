@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100 dark:bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Astra - Training Program</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f7fafc;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239C92AC' fill-opacity='0.05' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.99-7.5L26 15v19L13 41.5 0 34V15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .dark body {
+            background-color: #1a202c;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%23e9e9e9' fill-opacity='0.05' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.99-7.5L26 15v19L13 41.5 0 34V15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .nav-btn.active { background-color: #3b82f6; color: white; }
+        .view-btn.active { background-color: #3b82f6; color: white; }
+        .gradient-text {
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .dark .gradient-text {
+             background: linear-gradient(to right, #60a5fa, #93c5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            z-index: 50;
+            transform: translateY(0.5rem);
+            opacity: 0;
+            transition: opacity 150ms ease-in-out, transform 150ms ease-in-out;
+        }
+        .dropdown-menu.open {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .main-nav {
+            position: relative;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 dark:text-gray-200">
+
+    <div class="container mx-auto p-4 md:p-6">
+
+        <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div>
+                    <h1 class="text-4xl font-bold gradient-text">Project: Astra</h1>
+                    <p class="text-lg text-gray-500 dark:text-gray-400 mt-1">Your daily training overview.</p>
+                </div>
+                <div id="mini-weather" class="mt-4 md:mt-0"></div>
+            </div>
+        </header>
+
+        <nav class="main-nav bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md p-3 mb-6 flex justify-center items-center">
+            <div id="main-category-nav" class="relative inline-flex flex-wrap justify-center rounded-lg shadow-sm" role="group">
+            </div>
+        </nav>
+
+        <div id="view-toggle-container" class="hidden">
+            <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md p-3 mb-6 flex justify-center items-center">
+                <div id="view-toggle" class="inline-flex rounded-lg shadow-sm" role="group">
+                    <button type="button" data-view="today" class="view-btn active py-2 px-6 text-sm font-medium text-gray-900 dark:text-white bg-transparent rounded-l-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                        Today
+                    </button>
+                    <button type="button" data-view="weekly" class="view-btn py-2 px-6 text-sm font-medium text-gray-900 dark:text-white bg-transparent border-t border-b border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                        Weekly
+                    </button>
+                    <button type="button" data-view="monthly" class="view-btn py-2 px-6 text-sm font-medium text-gray-900 dark:text-white bg-transparent rounded-r-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                        Monthly
+                    </button>
+                </div>
+            </nav>
+        </div>
+
+
+        <main id="program-container" class="transition-opacity duration-300">
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqUit7lSesTw5DyszDzuXBOh09PycGaaYVuMA7WaOcallVggGu7jug-Qiyq3D1hUhTJA/exec';
+            // Coordinates for Spata, Greece
+            const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast?latitude=37.96&longitude=23.95&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto';
+
+            const CATEGORIES = {
+                'Academy': ['Academy A', 'Academy B', 'Academy C'],
+                'Development': ['Development A', 'Development B'],
+                'Race': ['Race Sprints', 'Race Jumps', 'Race Hurdles', 'Race Endurance', 'Race Throws'],
+                'Adults': ['Adults']
+            };
+            const COLOR_CONFIG = {
+                warmup: { title: 'Warm Up', border: 'border-orange-500', bg: 'bg-orange-50', darkBg: 'dark:bg-orange-900/50', text: 'text-orange-700', darkText: 'dark:text-orange-300', dot: 'bg-orange-400' },
+                main: { title: 'Main', border: 'border-blue-500', bg: 'bg-blue-50', darkBg: 'dark:bg-blue-900/50', text: 'text-blue-700', darkText: 'dark:text-blue-300', dot: 'bg-blue-500' },
+                cooldown: { title: 'Cooldown', border: 'border-green-500', bg: 'bg-green-50', darkBg: 'dark:bg-green-900/50', text: 'text-green-700', darkText: 'dark:text-green-300', dot: 'bg-green-500' },
+                notes: { title: 'Notes', border: 'border-gray-500', bg: 'bg-gray-100', darkBg: 'dark:bg-gray-700/50', text: 'text-gray-700', darkText: 'dark:text-gray-300', dot: 'bg-gray-400' }
+            };
+
+            const mainCategoryNav = document.getElementById('main-category-nav');
+            const viewToggleContainer = document.getElementById('view-toggle-container');
+            const viewToggle = document.getElementById('view-toggle');
+            const programContainer = document.getElementById('program-container');
+            const miniWeatherContainer = document.getElementById('mini-weather');
+
+
+            let fullProgramData = [];
+            let currentView = 'today';
+            let selectedCategory = null;
+            let selectedClass = null;
+            
+            const localToday = new Date();
+            let currentDate = new Date(Date.UTC(localToday.getFullYear(), localToday.getMonth(), localToday.getDate()));
+            const todayUTC = new Date(Date.UTC(localToday.getFullYear(), localToday.getMonth(), localToday.getDate()));
+
+            function init() {
+                mainCategoryNav.addEventListener('click', handleMainCategoryNavClick);
+                document.addEventListener('click', handleDocumentClick);
+
+                viewToggle.addEventListener('click', handleViewChange);
+                programContainer.addEventListener('click', handleContainerClick);
+                
+                renderMainNav();
+                renderOverview();
+            }
+            
+            function renderMainNav() {
+                mainCategoryNav.innerHTML = Object.keys(CATEGORIES).map((cat, index, arr) => {
+                    const isFirst = index === 0;
+                    const isLast = index === arr.length - 1;
+                    const rounded = isFirst ? 'rounded-l-lg' : isLast ? 'rounded-r-lg' : '';
+                    return `<div class="relative"><button type="button" data-category="${cat}" class="nav-btn py-2 px-6 text-sm font-medium text-gray-900 dark:text-white bg-transparent ${rounded} border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500">${cat}</button></div>`;
+                }).join('');
+            }
+            
+            function handleMainCategoryNavClick(e) {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const category = button.dataset.category;
+
+                if (category === 'Adults') {
+                    closeAllDropdowns();
+                    selectedCategory = 'Adults';
+                    selectedClass = 'Adults';
+                    updateActiveNavButtons();
+                    fetchData();
+                    return;
+                }
+
+                const existingDropdown = document.querySelector(`.dropdown-menu[data-category="${category}"]`);
+                closeAllDropdowns();
+
+                if (!existingDropdown) {
+                    const subCats = CATEGORIES[category];
+                    const mainButton = document.querySelector(`#main-category-nav button[data-category="${category}"]`);
+                    if (subCats && mainButton) {
+                        const dropdown = createDropdown(subCats, category);
+                        mainButton.parentElement.appendChild(dropdown);
+                        setTimeout(() => dropdown.classList.add('open'), 10);
+                    }
+                }
+            }
+            
+            function handleDocumentClick(e) {
+                if (!e.target.closest('#main-category-nav')) {
+                    closeAllDropdowns();
+                }
+            }
+
+            function createDropdown(items, category) {
+                const menu = document.createElement('div');
+                menu.className = 'dropdown-menu w-48 mt-2 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none';
+                menu.dataset.category = category;
+                menu.innerHTML = `<div class="py-1" role="menu" aria-orientation="vertical">${items.map(item => `<a href="#" data-class="${item}" class="sub-nav-item text-gray-700 dark:text-gray-300 block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">${item}</a>`).join('')}</div>`;
+                menu.addEventListener('click', handleSubCategorySelect);
+                return menu;
+            }
+
+            function handleSubCategorySelect(e) {
+                e.preventDefault();
+                const link = e.target.closest('a.sub-nav-item');
+                if (!link) return;
+                
+                selectedClass = link.dataset.class;
+                selectedCategory = Object.keys(CATEGORIES).find(key => CATEGORIES[key].includes(selectedClass));
+                
+                updateActiveNavButtons();
+                fetchData();
+                closeAllDropdowns();
+            }
+
+            function closeAllDropdowns() {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.remove());
+            }
+
+            function updateActiveNavButtons() {
+                document.querySelectorAll('#main-category-nav button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.category === selectedCategory);
+                });
+            }
+
+            async function fetchData() {
+                if (!selectedClass) return;
+                showLoader();
+                viewToggleContainer.classList.remove('hidden');
+                const requestUrl = `${WEB_APP_URL}?className=${encodeURIComponent(selectedClass)}`;
+                try {
+                    const response = await fetch(requestUrl);
+                    if (!response.ok) throw new Error(`Network response was not ok`);
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    fullProgramData = data.map(day => {
+                        const d = new Date(day.date);
+                        return {
+                            date: new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())),
+                            day: day.day, warmup: day['warm up'], main: day.main, cooldown: day.cooldown, notes: day.notes
+                        };
+                    });
+                    render();
+                } catch (error) {
+                    programContainer.innerHTML = createErrorCard(`Failed to load data for ${selectedClass}.`, `Details: ${error.message}.`);
+                }
+            }
+
+            function render() {
+                if (!selectedClass) {
+                    renderOverview();
+                    return;
+                }
+                programContainer.style.opacity = 0;
+                setTimeout(() => {
+                    switch (currentView) {
+                        case 'today': renderTodayView(); break;
+                        case 'weekly': renderWeeklyAsListView(); break;
+                        case 'monthly': renderMonthlyAsCalendarGridView(); break;
+                    }
+                    programContainer.style.opacity = 1;
+                }, 150);
+            }
+            
+            async function fetchAndRenderWeather() {
+                 try {
+                    const response = await fetch(WEATHER_API_URL);
+                    const weatherData = await response.json();
+                    renderMiniWeather(weatherData);
+                    return weatherData;
+                } catch (e) {
+                    miniWeatherContainer.innerHTML = '';
+                    throw e;
+                }
+            }
+
+            function renderMiniWeather(data) {
+                if (!data || !data.current) return;
+                const { icon } = getWeatherInfo(data.current.weather_code, 'w-8 h-8');
+                miniWeatherContainer.innerHTML = `
+                    <div class="flex items-center justify-end space-x-2">
+                        ${icon}
+                        <span class="font-semibold text-xl text-gray-700 dark:text-gray-300">${Math.round(data.current.temperature_2m)}°C</span>
+                    </div>`;
+            }
+
+            async function renderOverview() {
+                viewToggleContainer.classList.add('hidden');
+                showLoader();
+                try {
+                    const weatherData = await fetchAndRenderWeather();
+                    programContainer.innerHTML = createWeatherWidgetHTML(weatherData);
+                } catch (e) {
+                    programContainer.innerHTML = createErrorCard('Could Not Load Weather', 'There was an issue fetching the latest weather data.');
+                }
+            }
+
+            function createWeatherWidgetHTML(data) {
+                const { description, icon } = getWeatherInfo(data.current.weather_code, 'w-24 h-24');
+                
+                // --- Dynamic Class Suggestions Logic ---
+                const now = new Date();
+                const totalMinutes = now.getHours() * 60 + now.getMinutes();
+                let suggestions = new Set();
+                if (totalMinutes >= 960 && totalMinutes <= 1130) suggestions.add('Academy');      // 16:00 - 18:50
+                if (totalMinutes >= 1131 && totalMinutes <= 1215) suggestions.add('Development'); // 18:51 - 20:15
+                if (totalMinutes >= 1131 && totalMinutes <= 1275) suggestions.add('Race');        // 18:51 - 21:15
+                if (totalMinutes >= 1195 && totalMinutes <= 1260) suggestions.add('Adults');       // 19:55 - 21:00
+                const suggestionArray = Array.from(suggestions);
+
+                const suggestionHTML = suggestionArray.length > 0 ? `
+                    <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">Current Classes</h3>
+                        <div class="flex justify-center flex-wrap gap-4 mt-4">
+                            ${suggestionArray.map(cat => `<button data-category="${cat}" class="suggestion-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">${cat}</button>`).join('')}
+                        </div>
+                    </div>
+                ` : '';
+                
+                // --- Main Widget HTML ---
+                return `
+                    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Weather Overview</h2>
+                        <p class="text-gray-500 dark:text-gray-400">Live from Spata, Greece</p>
+                        <div class="flex items-center justify-center my-6">
+                            <div class="w-24 h-24">${icon}</div>
+                            <div class="ml-4 text-left">
+                                <p class="text-5xl font-bold text-gray-900 dark:text-white">${Math.round(data.current.temperature_2m)}°C</p>
+                                <p class="text-lg text-gray-600 dark:text-gray-300">${description}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-center space-x-8 text-gray-700 dark:text-gray-300">
+                             <div><p class="font-semibold">High</p><p class="text-2xl">${Math.round(data.daily.temperature_2m_max[0])}°</p></div>
+                             <div><p class="font-semibold">Low</p><p class="text-2xl">${Math.round(data.daily.temperature_2m_min[0])}°</p></div>
+                        </div>
+                        ${suggestionHTML}
+                        <p class="mt-8 text-gray-500 dark:text-gray-400">Please select a category above to view the full training program.</p>
+                    </div>`;
+            }
+            
+            function getWeatherInfo(code, sizeClass = 'h-full w-full') {
+                const weatherMap = {
+                    0: { description: 'Clear sky', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12,8a4,4,0,1,1-4,4A4,4,0,0,1,12,8m0-2a6,6,0,1,0,6,6A6,6,0,0,0,12,6ZM20,11H22V13H20ZM11,2V0h2V2ZM11,22v2h2V22ZM2,11H4V13H2ZM18.36,5.64l1.42-1.42,1.41,1.41-1.41,1.42ZM4.22,19.78l1.42-1.41,1.41,1.41L5.64,21.19ZM4.22,5.64,5.64,4.22l1.41,1.42L5.64,7.05Z"/></svg>` },
+                    1: { description: 'Mainly clear', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12,8a4,4,0,1,1-4,4A4,4,0,0,1,12,8m0-2a6,6,0,1,0,6,6A6,6,0,0,0,12,6ZM20,11H22V13H20ZM11,2V0h2V2ZM11,22v2h2V22ZM2,11H4V13H2ZM18.36,5.64l1.42-1.42,1.41,1.41-1.41,1.42ZM4.22,19.78l1.42-1.41,1.41,1.41L5.64,21.19ZM4.22,5.64,5.64,4.22l1.41,1.42L5.64,7.05Z"/></svg>` },
+                    2: { description: 'Partly cloudy', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-gray-400" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5,13A4.5,4.5,0,0,0,12,8.5A4.5,4.5,0,0,0,7.5,13c-2.48,0-4.5,2.02-4.5,4.5S5.02,22,7.5,22h9c2.48,0,4.5-2.02,4.5-4.5S18.98,13,16.5,13Z"/></svg>` },
+                    3: { description: 'Overcast', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35,10.04C18.67,6.59,15.64,4,12,4C9.11,4,6.6,5.64,5.35,8.04C2.34,8.36,0,10.91,0,14c0,3.31,2.69,6,6,6h13c2.76,0,5-2.24,5-5C24,12.36,21.95,10.22,19.35,10.04Z"/></svg>` },
+                    45: { description: 'Fog', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-gray-400" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12H4C3.45 12 3 11.55 3 11S3.45 10 4 10H20C20.55 10 21 10.45 21 11S20.55 12 20 12M4 7H20C20.55 7 21 6.55 21 6S20.55 5 20 5H4C3.45 5 3 5.45 3 6S3.45 7 4 7M20 17H4C3.45 17 3 16.55 3 16S3.45 15 4 15H20C20.55 15 21 15.45 21 16S20.55 17 20 17Z"/></svg>` },
+                    48: { description: 'Rime fog', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-gray-400" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12H4C3.45 12 3 11.55 3 11S3.45 10 4 10H20C20.55 10 21 10.45 21 11S20.55 12 20 12M4 7H20C20.55 7 21 6.55 21 6S20.55 5 20 5H4C3.45 5 3 5.45 3 6S3.45 7 4 7M20 17H4C3.45 17 3 16.55 3 16S3.45 15 4 15H20C20.55 15 21 15.45 21 16S20.55 17 20 17Z"/></svg>` },
+                    61: { description: 'Slight rain', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4s-6.67 2.59-7.35 6.04C2.34 10.36 0 12.91 0 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM8 19H6v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>` },
+                    80: { description: 'Rain showers', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4s-6.67 2.59-7.35 6.04C2.34 10.36 0 12.91 0 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM8 19H6v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>` },
+                    95: { description: 'Thunderstorm', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass} text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4s-6.67 2.59-7.35 6.04C2.34 10.36 0 12.91 0 16c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM11 15v4h2v-4h3l-4-5-4 5h3z"/></svg>` },
+                };
+                return weatherMap[code] || weatherMap[0]; // Default to clear sky
+            }
+
+            function renderTodayView() {
+                const program = findProgramForDate(currentDate);
+                const navHeader = `<div class="flex items-center justify-between mb-4"><button id="prev-day" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">${currentDate.toLocaleDateString(undefined, { timeZone: 'UTC', weekday: 'long', month: 'long', day: 'numeric' })}</h2><button id="next-day" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button></div>`;
+                programContainer.innerHTML = program ? navHeader + createDayCardHTML(program) : navHeader + createInfoCard("No Program Found", "There is no training program scheduled for this day.");
+                programContainer.className = '';
+            }
+            
+            function renderWeeklyAsListView() {
+                let content = '<div class="space-y-4">';
+                const startOfWeek = new Date(currentDate.getTime());
+                startOfWeek.setUTCDate(startOfWeek.getUTCDate() - (startOfWeek.getUTCDay() + 6) % 7);
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(startOfWeek.getTime());
+                    day.setUTCDate(startOfWeek.getUTCDate() + i);
+                    content += createWeeklyListItem(day, findProgramForDate(day));
+                }
+                content += '</div>';
+                programContainer.innerHTML = content;
+                programContainer.className = '';
+            }
+
+            function renderMonthlyAsCalendarGridView() {
+                const year = currentDate.getUTCFullYear();
+                const month = currentDate.getUTCMonth();
+                const monthName = new Date(Date.UTC(year, month)).toLocaleString('default', { month: 'long', year: 'numeric' });
+                const header = `<div class="flex items-center justify-between mb-4"><h2 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">${monthName}</h2></div><div class="grid grid-cols-7 gap-2 text-center font-semibold text-gray-500 dark:text-gray-400 mb-2">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div>${d}</div>`).join('')}</div>`;
+                const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+                const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
+                const startDayOfWeek = (firstDayOfMonth.getUTCDay() + 6) % 7;
+                let calendarGrid = '';
+                for (let i = 0; i < startDayOfWeek; i++) calendarGrid += '<div></div>';
+                for (let i = 1; i <= lastDayOfMonth.getUTCDate(); i++) {
+                    calendarGrid += createMonthlyCalendarCell(new Date(Date.UTC(year, month, i)));
+                }
+                programContainer.className = 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-4';
+                programContainer.innerHTML = header + `<div class="grid grid-cols-7 gap-1 md:gap-2">${calendarGrid}</div>`;
+            }
+
+            function createDayCardHTML(program) { return `<div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6">${((program.warmup&&program.warmup.trim())||(program.main&&program.main.trim())||(program.cooldown&&program.cooldown.trim())||(program.notes&&program.notes.trim()))?`<div class="space-y-4">${createProgramPartHTML(COLOR_CONFIG.warmup,program.warmup)}${createProgramPartHTML(COLOR_CONFIG.main,program.main)}${createProgramPartHTML(COLOR_CONFIG.cooldown,program.cooldown)}${createProgramPartHTML(COLOR_CONFIG.notes,program.notes)}</div>`:'<p class="text-center text-gray-500 dark:text-gray-400 py-8">No training details entered for this day.</p>'}</div>`; }
+            function createProgramPartHTML(config, content) { if (!content || !content.trim()) return ''; return `<div class="border-l-4 ${config.border} ${config.bg} ${config.darkBg} p-4 rounded-md"><pre class="whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-sans text-base">${content}</pre></div>`; }
+            function createWeeklyListItem(date, program) { const isToday = todayUTC.getTime() === date.getTime(); const hasContent = program && ((program.warmup && program.warmup.trim()) || (program.main && program.main.trim()) || (program.cooldown && program.cooldown.trim())); const detailsHTML = hasContent ? ['warmup', 'main', 'cooldown'].map(part => { if (program[part] && program[part].trim()) { const config = COLOR_CONFIG[part]; return `<div class="flex items-center text-sm"><span class="w-3 h-3 rounded-full ${config.dot} mr-2 flex-shrink-0"></span><span class="font-semibold">${config.title}:</span><span class="ml-2 text-gray-600 dark:text-gray-400 truncate">${program[part].trim().split('\n')[0]}</span></div>`; } return ''; }).join('') : '<p class="text-sm text-gray-500 dark:text-gray-400">No training scheduled.</p>'; return `<div data-date="${date.toISOString()}" class="day-selector bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg hover:border-blue-500 border-2 border-transparent transition-all cursor-pointer ${isToday ? '!border-blue-500' : ''}"><p class="font-bold text-lg ${isToday ? 'text-blue-600 dark:text-blue-400' : ''}">${date.toLocaleDateString(undefined, { timeZone: 'UTC', weekday: 'long', day: 'numeric' })}</p><div class="mt-2 space-y-1">${detailsHTML}</div></div>`; }
+            function createMonthlyCalendarCell(date) { const program = findProgramForDate(date); const isToday = todayUTC.getTime() === date.getTime(); const indicators = program ? ['warmup', 'main', 'cooldown'].map(p => (program[p] && program[p].trim()) ? `<div class="w-1.5 h-1.5 rounded-full ${COLOR_CONFIG[p].dot}"></div>` : '').join('') : ''; return `<div data-date="${date.toISOString()}" class="day-selector p-2 h-20 flex flex-col justify-start items-center rounded-lg cursor-pointer transition-colors ${isToday ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"><span class="text-sm font-medium">${date.getUTCDate()}</span><div class="flex space-x-1 mt-auto mb-1">${indicators}</div></div>`; }
+            function createInfoCard(title, message) { return `<div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center"><h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300">${title}</h2><p class="text-gray-500 dark:text-gray-400 mt-2">${message}</p></div>`; }
+            function createErrorCard(title, message) { return `<div class="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-6 rounded-r-lg" role="alert"><p class="font-bold text-xl">${title}</p><p class="mt-2">${message}</p></div>`; }
+            function showLoader() { programContainer.innerHTML = `<div class="flex justify-center items-center p-20"><svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-xl text-gray-500 dark:text-gray-400">Loading...</span></div>`; }
+            function handleViewChange(e) { if (e.target.tagName === 'BUTTON') { currentView = e.target.dataset.view; updateActiveButton(); render(); } }
+            function handleContainerClick(e) { 
+                const daySelector = e.target.closest('.day-selector');
+                if (daySelector) { 
+                    const selected = new Date(daySelector.dataset.date); 
+                    currentDate = new Date(Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), selected.getUTCDate())); 
+                    currentView = 'today'; 
+                    updateActiveButton(); 
+                    render(); 
+                    return; 
+                } 
+                if (e.target.closest('#prev-day')) { currentDate.setUTCDate(currentDate.getUTCDate() - 1); renderTodayView(); } 
+                if (e.target.closest('#next-day')) { currentDate.setUTCDate(currentDate.getUTCDate() + 1); renderTodayView(); }
+                const suggestionBtn = e.target.closest('.suggestion-btn');
+                if (suggestionBtn) {
+                    handleMainCategoryNavClick({ target: document.querySelector(`button[data-category="${suggestionBtn.dataset.category}"]`) });
+                }
+            }
+            function updateActiveButton() { document.querySelectorAll('.view-btn.active').forEach(b => b.classList.remove('active')); document.querySelector(`.view-btn[data-view="${currentView}"]`).classList.add('active'); }
+            function findProgramForDate(date) { const targetTimestamp = date.getTime(); return fullProgramData.find(day => day.date.getTime() === targetTimestamp); }
+            init();
+        });
+    </script>
+
+</body>
+</html>
+
